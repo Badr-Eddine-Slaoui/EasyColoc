@@ -1,0 +1,95 @@
+@startuml
+
+    enum UserRole{
+        ADMIN,
+        USER,
+    }
+
+    enum UserStatus{
+        ACTIVE,
+        DESACTIVE,
+    }
+
+    class User{
+        - name: string
+        - email: string
+        - password: string
+        - role: UserRole
+        - reputation: int
+        - is_banned: boolean
+        - status: UserStatus
+        - created_at: timestamp
+        - updated_at: timestamp
+    }
+
+    User -- UserRole
+    User -- UserStatus
+
+    enum ColocationStatus{
+        ACTIVE,
+        DESACTIVE,
+    }
+
+    class Colocation{
+        - name: string
+        - description: text
+        - status: ColocationStatus
+        - created_at: timestamp
+        - updated_at: timestamp
+    }
+
+    Colocation -- ColocationStatus
+
+    enum ColocationMemberRole{
+        Owner,
+        Member,
+    }
+
+    class ColocationMember{
+        - role: ColocationMemberRole
+        - left_at: timestamp
+        - created_at: timestamp
+        - updated_at: timestamp
+    }
+
+    ColocationMember -- ColocationMemberRole
+
+    class Category{
+        - name: string
+        - description: text
+        - created_at: timestamp
+        - updated_at: timestamp
+    }
+
+    class Expense{
+        - title: string 
+        - amount: float
+        - created_at: timestamp
+        - updated_at: timestamp
+    }
+
+    enum ExpenseDetailStatus{
+        PAID,
+        PENDING,
+    }
+
+    class ExpenseDetail{
+        - amount: float
+        - status: ExpenseDetailStatus
+    }
+
+    ExpenseDetail -- ExpenseDetailStatus
+
+    ColocationMember "1" -- "1" Colocation
+
+    ColocationMember "1" -- "0..*" Expense
+
+    ColocationMember "1" -- "0..*" ExpenseDetail
+
+    Colocation "1" -- "0..*" Category
+
+    Expense "0..*" -- "1" Category
+
+    Expense "1" -- "0..*" ExpenseDetail
+
+@enduml
