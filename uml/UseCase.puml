@@ -1,0 +1,73 @@
+@startuml
+
+    left to right direction
+    
+
+    actor Owner
+    actor Member
+
+    rectangle "Colocation System"{
+        usecase "Create expence" as UC8
+        usecase "Mark expense as paid" as UC9
+
+        usecase "Invite users" as UC10
+        usecase "Remove user" as UC11
+        usecase "Delete colocation" as UC12
+
+        usecase "Manage categories" as UC13
+        usecase "Consult category" as UC14
+        usecase "Create category" as UC15
+        usecase "Update category" as UC16
+        usecase "Delete category" as UC17
+
+        Member -- UC8
+        Member -- UC9
+
+        Member <|-- Owner
+
+        Owner -- UC10
+        Owner -- UC11
+        Owner -- UC12
+
+        UC13 <|-- UC14
+        UC13 <|-- UC15
+        UC13 <|-- UC16
+        UC13 <|-- UC17
+
+        Owner -- UC13
+    }
+
+    actor User
+
+    actor Admin
+
+    rectangle "General System"{
+        usecase register as UC1
+        usecase login as UC2
+        usecase logout as UC3
+
+        usecase "Consult Statistics" as UC4
+        usecase "Ban/Unban User" as UC5
+        usecase "Active/Desactive User" as UC6
+
+        usecase "Create/Join Colocation" as UC7
+
+        User -- UC1
+        User -- UC7
+
+        User <|-- Admin
+
+        Admin -- UC4
+        Admin -- UC5
+        Admin -- UC6
+
+        UC2 ...> UC1: <<extend>>
+        UC3 ...> UC2: <<extend>>
+
+        UC4 ...> UC2 : <<include>>
+        UC5 ...> UC2 : <<include>>
+        UC6 ...> UC2 : <<include>>
+        UC7 ...> UC2 : <<include>>
+    }
+
+@enduml
