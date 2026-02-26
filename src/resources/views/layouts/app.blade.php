@@ -35,6 +35,8 @@
                         "neutral-900": "#1a0f0a",
                         "parchment": "#fdf8e1",
                         "nautical-gold": "#b8860b",
+                        "card-dark": "#1c2536",
+                        "border-dark": "#2d3a4f",
                     },
                     fontFamily: {
                         "display": ["Spline Sans", "sans-serif"]

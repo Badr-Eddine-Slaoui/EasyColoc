@@ -69,11 +69,11 @@
                             <span class="material-symbols-outlined">dashboard</span>
                             Accéder au Tableau de Bord
                         </a>
-                        <button
+                        <a href="{{ route('colocation.members', $colocationId) }}"
                             class="w-full bg-transparent hover:bg-primary/5 text-slate-600 dark:text-slate-400 font-medium py-3 px-6 rounded-xl border border-slate-200 dark:border-primary/20 transition-all flex items-center justify-center gap-2">
                             <span class="material-symbols-outlined text-sm">group</span>
                             Voir mes coéquipiers
-                        </button>
+                        </a>
                     </div>
                     <!-- Small Pirate Sign-off -->
                     <div

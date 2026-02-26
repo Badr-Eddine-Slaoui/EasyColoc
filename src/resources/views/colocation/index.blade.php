@@ -86,14 +86,16 @@
                                         </p>
                                     </div>
                                     <div
-                                        class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                                        <button onclick="showDisactivateModal({{ $active->id }})"
-                                            class="flex items-center gap-2 px-4 py-2 text-crimson hover:bg-crimson/10 rounded-xl text-sm font-bold transition-colors">
-                                            <span class="material-symbols-outlined text-lg">cancel</span>
-                                            Annuler la colocation
-                                        </button>
+                                        class="flex flex-wrap items-center @if($active->owner->user_id === auth()->user()->id) justify-between @else justify-end @endif gap-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                                        @if ($active->owner->user_id === auth()->user()->id)
+                                            <button onclick="showDisactivateModal({{ $active->id }})"
+                                                class="flex items-center gap-2 px-4 py-2 text-crimson hover:bg-crimson/10 rounded-xl text-sm font-bold transition-colors">
+                                                <span class="material-symbols-outlined text-lg">cancel</span>
+                                                Annuler la colocation
+                                            </button>
+                                        @endif
                                         <a href="{{ route('colocation.show', $active->id) }}"
-                                            class="flex items-center justify-center min-w-[100px] h-10 px-6 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-navy-dark text-sm font-black transition-transform active:scale-95 shadow-md">
+                                            class="flex items-center justify-center jus min-w-[100px] h-10 px-6 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-navy-dark text-sm font-black transition-transform active:scale-95 shadow-md">
                                             Voir
                                         </a>
                                     </div>

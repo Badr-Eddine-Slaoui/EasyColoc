@@ -11,7 +11,8 @@
         <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="space-y-1">
                 <h1
-                    class="text-4xl font-black tracking-tighter text-slate-900 dark:text-slate-100 uppercase italic border-l-4 border-primary pl-4">{{ $colocation->name }}</h1>
+                    class="text-4xl font-black tracking-tighter text-slate-900 dark:text-slate-100 uppercase italic border-l-4 border-primary pl-4">
+                    {{ $colocation->name }}</h1>
                 <p class="text-slate-500 dark:text-slate-400 font-medium">Tableau de bord de la colocation</p>
             </div>
             <div class="flex gap-4 w-full md:w-auto">
@@ -23,7 +24,9 @@
                 </div>
                 <div class="flex-1 md:min-w-[180px] p-5 rounded-xl bg-primary/10 border border-primary/20">
                     <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">Votre Solde</p>
-                    <p class="text-2xl font-black @if($sold >= 0) text-green-500 @else text-primary @endif">{{ $sold }}€</p>
+                    <p
+                        class="text-2xl font-black @if ($sold >= 0) text-green-500 @else text-primary @endif">
+                        {{ $sold }}€</p>
                 </div>
             </div>
         </section>
@@ -50,9 +53,10 @@
                     </a>
                 @endif
             </div>
-            <button class="text-sm font-bold text-primary hover:underline underline-offset-4 flex items-center gap-1">
+            <a href="{{ route('colocation.members', $colocation->id) }}"
+                class="text-sm font-bold text-primary hover:underline underline-offset-4 flex items-center gap-1">
                 Voir tous les membres <span class="material-symbols-outlined text-xs">arrow_forward</span>
-            </button>
+            </a>
         </section>
         <!-- Filter & Table Section -->
         <section class="space-y-4">
@@ -63,7 +67,7 @@
                 </h3>
                 <div class="relative">
                     <form action="" method="get" onchange="this.submit()">
-                        <input type="month" name="month-year"
+                        <input type="month" name="month-year" value="{{ request('month-year') }}"
                             class="custom-select w-full rounded-xl border border-primary/20 bg-white px-4 py-3 pr-10 text-sm font-medium focus:border-accent-gold focus:ring-accent-gold dark:bg-slate-900 dark:text-slate-100"
                             id="month-select" />
                     </form>
@@ -108,11 +112,17 @@
                                     @if ($expense->creator->user_id == auth()->id())
                                         <div class="flex justify-end gap-2">
                                             <button
+                                                onclick='showExpenseDetailsModal({{ auth()->id() }}, @json($expense->details), {{ $expense->details->count() }}, "{{ $expense->title }}", "{{ $expense->amount }}", "{{ $expense->category->name }}")'
+                                                class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
+                                                <span class="material-symbols-outlined text-lg">visibility</span>
+                                            </button>
+                                            <button
                                                 onclick="showEditExpenseModal({{ $expense->id }}, '{{ $expense->title }}', {{ $expense->category_id }}, {{ $expense->amount }})"
                                                 class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
                                                 <span class="material-symbols-outlined text-lg">edit</span>
                                             </button>
-                                            <button onclick="showDeleteExpenseModal({{ $expense->id }}, '{{ $expense->title }}', '{{ $expense->amount }}', '{{ $expense->category->name }}')"
+                                            <button
+                                                onclick="showDeleteExpenseModal({{ $expense->id }}, '{{ $expense->title }}', '{{ $expense->amount }}', '{{ $expense->category->name }}')"
                                                 class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
                                                 <span class="material-symbols-outlined text-lg">delete</span>
                                             </button>
@@ -188,7 +198,8 @@
                             </div>
                         @endif
                     @empty
-                        <div class="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/20">
+                        <div
+                            class="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/20">
                             <div class="flex items-center gap-3">
                                 <div
                                     class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
@@ -229,9 +240,9 @@
                                 class="text-primary font-bold">Membre</span>, vous pouvez quitter cette colocation à tout
                             moment. Assurez-vous d'avoir soldé vos comptes avant de partir.</p>
                         <div class="pt-2 border-t border-primary/10">
-                            <button
-                                class="w-full flex items-center justify-center gap-2 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-sm tracking-widest rounded-lg transition-all border border-red-700 shadow-lg shadow-red-500/20"><span
-                                    class="material-symbols-outlined">logout</span> QUITTER LA COLOCATION </button>
+                            <button onclick="showLeaveModal({{ $colocation->id }})"
+                                class="w-full flex items-center justify-center gap-2 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-sm tracking-widest rounded-lg transition-all border border-red-700 shadow-lg shadow-red-500/20">
+                                <span class="material-symbols-outlined">logout</span> QUITTER LA COLOCATION </button>
                         </div>
                     </div>
                 @endif
@@ -709,6 +720,277 @@
             const modal = document.getElementById('desactivate-colocation-modal');
             const form = modal.querySelector('form');
             form.action = "";
+            modal.classList.add('hidden');
+        }
+    </script>
+
+    <div id="left-colocation-modal"
+        class="fixed inset-0 bg-navy-deep/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div
+            class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden">
+            <div class="layout-container flex h-full grow flex-col">
+                <!-- Main Content Container -->
+                <div class="px-4 md:px-40 flex flex-1 justify-center py-10 items-center">
+                    <div
+                        class="layout-content-container flex flex-col max-w-[480px] flex-1 bg-background-dark/50 border border-primary/20 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                        <!-- Header with Branding -->
+                        <header
+                            class="flex items-center justify-between border-b border-solid border-primary/20 px-6 py-4 bg-background-dark/80">
+                            <div class="flex items-center gap-3">
+                                <div class="text-primary flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">sailing</span>
+                                </div>
+                                <h2 class="text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">EasyColoc
+                                </h2>
+                            </div>
+                            <button onclick="closeLeaveModal()"
+                                class="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </header>
+                        <!-- Modal Body -->
+                        <div class="p-6 flex flex-col items-center">
+                            <!-- Icon/Illustration Area -->
+                            <div class="mb-6 relative">
+                                <div class="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
+                                <div
+                                    class="relative w-24 h-24 bg-background-dark border-2 border-primary/30 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(199,41,41,0.3)]">
+                                    <span class="material-symbols-outlined text-primary text-5xl"
+                                        style="font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;">anchor</span>
+                                    <div
+                                        class="absolute -bottom-1 -right-1 bg-primary rounded-full p-1 border-2 border-background-dark">
+                                        <span class="material-symbols-outlined text-white text-sm">warning</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <h2 class="text-slate-100 tracking-tight text-2xl font-bold leading-tight text-center pb-4">
+                                Quitter la Colocation ?
+                            </h2>
+                            <!-- Visual Divider/Graphic -->
+                            <div
+                                class="w-full h-48 mb-6 rounded-lg overflow-hidden border border-primary/10 relative group">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent z-10">
+                                </div>
+                                <img alt="Cozy living room shared space" class="w-full h-full object-cover opacity-60"
+                                    data-alt="Modern shared apartment living room with warm lighting"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_8CqzLPx_ibsGor6I23bB5f9ptculdNO1OmBtXOna-KCPoBI7urc-gPFB6u_D62VCyxzvXVeCKQoemnHkTYUpK-saZZd0vh0LhIIr7Rq80LwBVId9TOFcr6A1wq1V8e2SsRCsNW9KJJVMoyPISuwxbaGYUDNawRkk_OgwwcwGTIRVuIaxIbSQeM5Tvpx2dH3xBTozh_4bYfa4L8joYpEB1rZV86D7SrqFGerJevEoReiGlm-_mgWSWutxNycaNCD_rs7cWxKlvBw" />
+                                <div class="absolute bottom-3 left-0 right-0 z-20 px-4 text-center">
+                                    <span class="text-accent-gold text-xs font-semibold tracking-widest uppercase">Dernière
+                                        escale</span>
+                                </div>
+                            </div>
+                            <p class="text-slate-300 text-base font-normal leading-relaxed text-center px-2">
+                                Attention ! Vous êtes sur le point de quitter cet équipage. Assurez-vous d'avoir soldé tous
+                                vos comptes avec vos <span class="text-primary font-semibold">nakamas</span> avant de
+                                partir.
+                            </p>
+                        </div>
+                        <!-- Actions -->
+                        <div class="flex flex-col gap-3 px-6 pb-8">
+                            <form action="" method="post">
+                                @csrf
+                                @method('DELETE')
+                                <button
+                                    class="flex items-center justify-center rounded-lg h-14 px-5 bg-primary text-white text-base font-bold leading-normal tracking-wide w-full hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98]">
+                                    <span class="material-symbols-outlined mr-2">logout</span>
+                                    <span class="truncate">Confirmer le départ</span>
+                                </button>
+                            </form>
+                            <button onclick="closeLeaveModal()"
+                                class="flex items-center justify-center rounded-lg h-14 px-5 bg-slate-800 dark:bg-slate-800/50 text-slate-100 text-base font-bold leading-normal tracking-wide w-full border border-slate-700 hover:bg-slate-700 transition-all active:scale-[0.98]">
+                                <span class="material-symbols-outlined mr-2">explore</span>
+                                <span class="truncate">Rester à Bord</span>
+                            </button>
+                        </div>
+                        <!-- Nautical Footer Motif -->
+                        <div class="h-1 bg-gradient-to-r from-transparent via-accent-gold/40 to-transparent"></div>
+                    </div>
+                </div>
+                <!-- Subtle background elements -->
+                <div class="fixed top-0 left-0 w-full h-full pointer-events-none opacity-5 overflow-hidden -z-10">
+                    <span class="material-symbols-outlined absolute top-10 left-10 text-[200px]">explore</span>
+                    <span class="material-symbols-outlined absolute bottom-20 right-10 text-[150px]">sailing</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLeaveModal(id) {
+            const modal = document.getElementById('left-colocation-modal');
+            const form = modal.querySelector('form');
+            form.action = "{{ route('colocation.leave', ':id') }}".replace(':id', id);
+            modal.classList.remove('hidden');
+        }
+
+        function closeLeaveModal() {
+            const modal = document.getElementById('left-colocation-modal');
+            const form = modal.querySelector('form');
+            form.action = "";
+            modal.classList.add('hidden');
+        }
+    </script>
+
+    <div id="expense-details-modal"
+        class="fixed inset-0 bg-navy-deep/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <!-- Modal Container -->
+        <div class="max-w-[800px] w-full bg-card-dark rounded-xl shadow-2xl border border-border-dark overflow-hidden">
+            <!-- Modal Header -->
+            <div class="relative p-6 sm:p-8 border-b border-border-dark bg-gradient-to-br from-card-dark to-[#161d2b]">
+                <div class="absolute top-4 right-4 text-accent-gold/20">
+                    <span class="material-symbols-outlined text-6xl rotate-12">sailing</span>
+                </div>
+                <div class="flex flex-col gap-2 relative z-10">
+                    <div class="flex items-center gap-2 text-accent-gold uppercase tracking-[0.2em] text-xs font-bold">
+                        <span class="material-symbols-outlined text-sm">menu_book</span>
+                        Journal du Thousand Sunny
+                    </div>
+                    <h1 class="text-slate-100 text-3xl font-black leading-tight tracking-tight">Détails du
+                        "<span class="expense-name text-accent-gold"></span>"</h1>
+                    <div class="mt-4 flex flex-wrap items-center gap-4">
+                        <div class="bg-primary/10 border border-primary/30 px-4 py-2 rounded-lg flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">category</span>
+                            <span class="expense-category text-slate-200 font-medium"></span>
+                        </div>
+                        <div
+                            class="bg-accent-gold/10 border border-accent-gold/30 px-4 py-2 rounded-lg flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent-gold">payments</span>
+                            <span class="text-slate-200 font-bold"><span class="expense-amount"></span>€</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Expense Summary Card -->
+            <div class="p-6 sm:p-8">
+                <!-- Division List -->
+                <div class="mt-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">groups</span>
+                            Répartition par membre
+                        </h2>
+                        <span class="text-sm text-slate-400">Total : <span class="members-count"></span> membres</span>
+                    </div>
+                    <div id="details" class="space-y-3">
+                    </div>
+                </div>
+            </div>
+            <!-- Modal Footer Actions -->
+            <div
+                class="p-6 bg-background-dark/80 border-t border-border-dark flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex justify-end w-full gap-3">
+                    <button onclick="closeExpenseDetailsModal()"
+                        class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-border-dark text-slate-200 font-bold hover:bg-slate-700 transition-all">
+                        Fermer le journal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showExpenseDetailsModal(user_id, details, member_count, expense_name, expense_amount, expense_category) {
+            const modal = document.getElementById('expense-details-modal');
+            const detailsContainer = document.getElementById('details');
+
+            const expenseName = modal.querySelector('.expense-name').textContent = expense_name;
+            const expenseAmount = modal.querySelector('.expense-amount').textContent = expense_amount;
+            const expenseCategory = modal.querySelector('.expense-category').textContent = expense_category;
+            const membersCount = modal.querySelector('.members-count').textContent = member_count;
+
+            let html = ``;
+            if(details.length > 0) {
+                details.forEach((detail) => {
+                    if(detail.status == 'PENDING') {
+                        html += `
+                            <div
+                                class="flex items-center justify-between bg-background-dark/30 hover:bg-background-dark/60 transition-colors p-4 rounded-xl border border-border-dark group">
+                                <div class="flex items-center gap-4">
+                                    <div class="relative">
+                                        <div class="h-12 w-12 rounded-full border-2 border-slate-700 overflow-hidden">
+                                            <img class="w-full h-full object-cover" data-alt="Avatar de ${detail.debtor.user.name}"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqcUWy1p9109H2n-uEV6Zpcu-q92Gm7KlMYYtEAZGXTAq0_BW_buipDPlw9AH7DTi2OG4L358Pwz3_iwaD0sKRO3-V8wfKVCU_eCLzeBHttEtzPUPBxxdRFUSPyy_eTW7-qrQEnsG1_4-bZvL4qodntaPY-GPCPly6IhdonBde8c5LeP6Y2TqrU_f0kerJPmAFa3meMhmSr8YnahBgWxRfg2OlPoxOUoIkPznmbxBMQSyex_K8OoBE8D_oE-_Ea9MbGejr8gPf630" />
+                                        </div>
+                                        <div
+                                            class="absolute -bottom-1 -right-1 bg-red-500 h-4 w-4 rounded-full border-2 border-card-dark">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-slate-100 font-bold">${detail.debtor.user.name}</p>
+                                        <p class="text-primary text-sm font-medium">Reste à payer : ${detail.amount} ฿</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span
+                                        class="hidden sm:inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20">
+                                        Dû
+                                    </span>
+                                    ${
+                                        user_id == detail.expense.creator.user_id ? `
+                                            <form action="${"{{ route('colocation.detail.mark-paid', ':id') }}".replace(':id', detail.id)}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <button
+                                                    class="bg-primary hover:bg-primary/90 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-lg shadow-primary/20">
+                                                    Marquer payé
+                                                </button>
+                                            </form>
+                                        ` : ``
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    }else if(detail.status == 'PAID') {
+                        html += `
+                            <div
+                                class="flex items-center justify-between bg-background-dark/30 hover:bg-background-dark/60 transition-colors p-4 rounded-xl border border-border-dark group">
+                                <div class="flex items-center gap-4">
+                                    <div class="relative">
+                                        <div class="h-12 w-12 rounded-full border-2 border-accent-gold overflow-hidden">
+                                            <img class="w-full h-full object-cover" data-alt="Avatar de ${detail.debtor.user.name}"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSDzEsQkON6WlFdZT16fj4xEXT1EeFWyXKWZCdx1iErDclRewWKCjJelYGee4jbCkXKrf3A1jWlzZhQ8Sdy3LwCFao7bHz3egkGA5iygJ5kehfEjOw4spPdgXWZ675_x2VdSfrq8umvra8-56ewqW5X8Wczk5cKln5WcBdIOcRVQ5bFrNo-ynsd-FZBdExEA7wte_KrdZuSuP2DaQePIqxBCx-VlOar3oI7zK8_Ae5n2QqTyuw0GvpVanIO_L1taNUMsBP0Knbc4Y" />
+                                        </div>
+                                        <div
+                                            class="absolute -bottom-1 -right-1 bg-emerald-500 h-4 w-4 rounded-full border-2 border-card-dark">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-slate-100 font-bold">${detail.debtor.user.name}</p>
+                                        <p class="text-emerald-500 text-sm font-medium">Réglé : ${detail.amount} ฿</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20">
+                                        <span class="material-symbols-outlined text-xs">check_circle</span>
+                                        Réglé
+                                    </span>
+                                    <button
+                                        class="bg-slate-700 cursor-not-allowed text-slate-400 text-xs font-bold px-4 py-2 rounded-lg"
+                                        disabled="">
+                                        Confirmé
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }else {
+                html += `
+                    <p class="text-slate-100 text-sm font-medium">Aucun details disponibles</p>
+                `;
+            }
+            detailsContainer.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function closeExpenseDetailsModal() {
+            const modal = document.getElementById('expense-details-modal');
+            const expenseName = modal.querySelector('.expense-name').textContent = "";
+            const expenseAmount = modal.querySelector('.expense-amount').textContent = "";
+            const expenseCategory = modal.querySelector('.expense-category').textContent = "";
+            const membersCount = modal.querySelector('.members-count').textContent = "";
             modal.classList.add('hidden');
         }
     </script>
