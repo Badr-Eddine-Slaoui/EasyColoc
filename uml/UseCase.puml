@@ -12,13 +12,18 @@
 
         usecase "Invite users" as UC10
         usecase "Remove user" as UC11
-        usecase "Delete colocation" as UC12
+        usecase "Manage colocation" as UC12
+        usecase "Add colocation" as UC13
+        usecase "Cancel colocation" as UC14
+        usecase "Delete colocation" as UC15
 
-        usecase "Manage categories" as UC13
-        usecase "Consult category" as UC14
-        usecase "Create category" as UC15
-        usecase "Update category" as UC16
-        usecase "Delete category" as UC17
+        usecase "Manage categories" as UC16
+        usecase "Consult category" as UC17
+        usecase "Create category" as UC18
+        usecase "Update category" as UC19
+        usecase "Delete category" as UC20
+
+        usecase "Accept/Decline invitation" as UC21
 
         Member -- UC8
         Member -- UC9
@@ -27,14 +32,21 @@
 
         Owner -- UC10
         Owner -- UC11
+
+        UC12 <|-- UC13
+        UC12 <|-- UC14
+        UC12 <|-- UC15
+
+        UC16 <|-- UC17
+        UC16 <|-- UC18
+        UC16 <|-- UC19
+        UC16 <|-- UC20
+
         Owner -- UC12
+        Owner -- UC16
 
-        UC13 <|-- UC14
-        UC13 <|-- UC15
-        UC13 <|-- UC16
-        UC13 <|-- UC17
-
-        Owner -- UC13
+        UC21 ...> UC10 : <<include>>
+        Member -- UC21
     }
 
     actor User

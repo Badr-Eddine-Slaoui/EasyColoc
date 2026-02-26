@@ -78,9 +78,11 @@
         - status: ExpenseDetailStatus
     }
 
+    User "1" -- "0..*" ColocationMember
+
     ExpenseDetail -- ExpenseDetailStatus
 
-    ColocationMember "1" -- "1" Colocation
+    ColocationMember "1..*" -- "1" Colocation
 
     ColocationMember "1" -- "0..*" Expense
 
