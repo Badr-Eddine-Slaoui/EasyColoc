@@ -30,8 +30,8 @@ class InvitationController extends Controller
         return view("invite.conflict");
     }
 
-    public function success(){
-        return view("invite.success");
+    public function success( int $colocationId){
+        return view("invite.success", compact("colocationId"));
     }
 
     public function invite(Request $request, int $colocationId){
@@ -80,19 +80,28 @@ class InvitationController extends Controller
 
     public function confirm(Request $request, int $colocationId){
         $activeCount = Colocation::active()->whereHas('members', function ($query) {
-            $query->where('user_id', Auth::id());
+            $query->where('user_id', Auth::id())
+                ->whereNull('left_at');
         })->count();
 
         if($activeCount > 0){
             return redirect()->route("invite.conflict");
         }
 
-        Colocation::find($colocationId)->members()->create([
-            "user_id" => Auth::id(),
-            "role" => "Member"
-        ]);
+        $colocation = Colocation::find($colocationId);
+        $member = $colocation->members()->where("user_id", Auth::id())->first();
+        if ($member) {
+            $member->update([
+                "left_at" => null
+            ]);
+        }else{
+            $colocation->members()->create([
+                "user_id" => Auth::id(),
+                "role" => "Member"
+            ]);
+        }
 
-        return redirect()->route("invite.success");
+        return redirect()->route("invite.success", $colocationId)->with("success","You joined the colocation successfully");
     }
 
     public function refuse(Request $request){

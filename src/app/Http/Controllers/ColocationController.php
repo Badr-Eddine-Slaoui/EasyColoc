@@ -15,12 +15,22 @@ class ColocationController extends Controller
     public function index()
     {
         $active = Colocation::active()->with(['members', "owner"])->whereHas('members', function ($query) {
-            $query->where('user_id', Auth::id());
+            $query->where('user_id', Auth::id())
+                ->whereNull('left_at');
         })->first();
 
-        $inactives = Colocation::inactive()->with('members')->whereHas('members', function ($query) {
-            $query->where('user_id', Auth::id());
-        })->get();
+        $inactives = Colocation::with('members')
+            ->where(function ($query) {
+                $query->where('status', 'DESACTIVE')
+                    ->orWhereHas('members', function ($q) {
+                        $q->where('user_id', Auth::id())
+                        ->whereNotNull('left_at');
+                    });
+            })
+            ->whereHas('members', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->get();
 
         $count = Colocation::with('members')->whereHas('members', function ($query) {
             $query->where('user_id', Auth::id());
@@ -39,7 +49,7 @@ class ColocationController extends Controller
             $month = now()->month;
         }
 
-        $colocation->load(['members.createdExpenses.category','members.createdExpenses.creator.user', "owner", "categories"]);
+        $colocation->load(['members.createdExpenses.category','members.createdExpenses.creator.user', 'members.createdExpenses.details.debtor.user', 'members.createdExpenses.details.expense.creator.user', "owner", "categories"]);
 
         $expenses = $colocation->members
             ->flatMap(fn ($member) => $member->createdExpenses)
@@ -55,13 +65,25 @@ class ColocationController extends Controller
         $currentMember = $colocation->members
             ->firstWhere('user_id', Auth::id());
 
-        $currentMemberAmount = $expenses
-            ->where('creator_member_id', $currentMember->id)
-            ->sum('amount');
+        $currentMemberDetails = $expenses
+            ->where('creator_member_id', $currentMember->id);
 
-        $otherMembersAmount = $expenses
-            ->where('creator_member_id', '!=', $currentMember->id)
-            ->sum('amount');
+        $currentMemberAmount = !$currentMemberDetails->count() ? 0 :  $currentMemberDetails
+            ->map(fn ($expense) => $expense->details
+                ->where("status", "PENDING")
+                ->sum('amount')
+            )
+            ->sum();
+
+        $otherMembersDetails = $expenses
+            ->where('creator_member_id', '!=', $currentMember->id);
+
+        $otherMembersAmount = !$otherMembersDetails->count() ? 0 : $otherMembersDetails
+            ->map(fn ($expense) => $expense->details
+                ->where("status", "PENDING")
+                ->sum('amount')
+            )
+            ->sum();
 
         $sold = $currentMemberAmount - $otherMembersAmount;
 
@@ -138,5 +160,82 @@ class ColocationController extends Controller
         ]);
 
         return redirect()->route("colocation.index")->with("success","Colocation deleted successfully");
+    }
+
+    public function leave(Colocation $colocation){
+        $member = $colocation->members()->where('user_id', Auth::id())->first();
+        $withoutDebts = ($member->debts()->where('status', "PAID")->sum("amount") - $member->debts()->where('status', "PENDING")->sum("amount")) === 0;
+        if($withoutDebts){
+            Auth::user()->increment("reputation", 1);
+        }else{
+            Auth::user()->decrement("reputation", 1);
+        }
+
+        $member->update([
+            "left_at" => now()
+        ]);
+
+        return redirect()->route("colocation.index")->with("success","You left the colocation successfully");
+    }
+
+    public function members(Colocation $colocation){
+        $colocation->load(['members.createdExpenses', "members.user",'members.createdExpenses.creator.user', "owner"]);
+        $expenses = $colocation->members
+            ->flatMap(fn ($member) => $member->createdExpenses)
+            ->sortByDesc('created_at')
+            ->values();
+
+        $members = $colocation->members
+            ->filter(fn ($member) => is_null($member->left_at))
+            ->map(function ($member) use ($expenses) {
+
+                $currentMemberDetails = $expenses
+                    ->where('creator_member_id', $member->id);
+
+                $currentMemberAmount = !$currentMemberDetails->count() ? 0 :  $currentMemberDetails
+                    ->map(fn ($expense) => $expense->details
+                        ->where("status", "PENDING")
+                        ->sum('amount')
+                    )
+                    ->sum();
+
+                $otherMembersDetails = $expenses
+                    ->where('creator_member_id', '!=', $member->id);
+
+                $otherMembersAmount = !$otherMembersDetails->count() ? 0 : $otherMembersDetails
+                    ->map(fn ($expense) => $expense->details
+                        ->where("status", "PENDING")
+                        ->sum('amount')
+                    )
+                    ->sum();
+
+                $member->sold = $currentMemberAmount - $otherMembersAmount;
+
+                return $member;
+            })
+            ->values();
+        return view("colocation.members", compact("members", "colocation"));
+    }
+
+    public function removeMember(Colocation $colocation, ColocationMember $colocationMember){
+        $owner_id = $colocation->members()->where("role", "Owner")->first()->id;
+        $colocationMember->debts()->update([
+            'debtor_member_id' => $owner_id
+        ]);
+
+        $colocationMember->update([
+            "left_at" => now()
+        ]);
+
+        return redirect()->route("colocation.show", $colocation)->with("success","Member removed successfully");
+    }
+
+    public function markPaid(ExpenseDetail $expenseDetail){
+
+        $expenseDetail->update([
+            "status" => "PAID"
+        ]);
+
+        return back()->with("success","Expense marked as paid successfully");
     }
 }
