@@ -109,13 +109,13 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    @if ($expense->creator->user_id == auth()->id())
-                                        <div class="flex justify-end gap-2">
-                                            <button
-                                                onclick='showExpenseDetailsModal({{ auth()->id() }}, @json($expense->details), {{ $expense->details->count() }}, "{{ $expense->title }}", "{{ $expense->amount }}", "{{ $expense->category->name }}")'
-                                                class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
-                                                <span class="material-symbols-outlined text-lg">visibility</span>
-                                            </button>
+                                    <div class="flex justify-end gap-2">
+                                        <button
+                                            onclick='showExpenseDetailsModal({{ auth()->id() }}, @json($expense->details), {{ $expense->details->count() }}, "{{ $expense->title }}", "{{ $expense->amount }}", "{{ $expense->category->name }}")'
+                                            class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-lg">visibility</span>
+                                        </button>
+                                        @if ($expense->creator->user_id == auth()->id())
                                             <button
                                                 onclick="showEditExpenseModal({{ $expense->id }}, '{{ $expense->title }}', {{ $expense->category_id }}, {{ $expense->amount }})"
                                                 class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
@@ -126,8 +126,8 @@
                                                 class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
                                                 <span class="material-symbols-outlined text-lg">delete</span>
                                             </button>
-                                        </div>
-                                    @endif
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
