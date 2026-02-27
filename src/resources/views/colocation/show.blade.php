@@ -901,7 +901,8 @@
 
             let html = ``;
             if(details.length > 0) {
-                details.forEach((detail) => {
+                details.filter((detail) => detail.debtor.left_at == null)
+                .forEach((detail) => {
                     if(detail.status == 'PENDING') {
                         html += `
                             <div
