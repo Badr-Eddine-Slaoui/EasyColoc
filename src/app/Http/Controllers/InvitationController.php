@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InvitationMail;
 use App\Models\Colocation;
 use App\Models\InvitationToken;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -40,12 +42,18 @@ class InvitationController extends Controller
             'email' => 'required|email',
         ])->validateWithBag('addInvitation');
 
+        $token = Str::uuid();
+
         InvitationToken::create([
             'email' => $request->email,
-            'token'=> Str::random(64),
+            'token'=> $token,
             'expires_at' => now()->addMinutes(10),
             'colocation_id' => $colocationId,
         ]);
+
+        Mail::to($request->email)->send(
+            new InvitationMail($token)
+        );
 
         return redirect()->route('colocation.show', $colocationId)->with('success','Invitation sent successfully');
     }

@@ -55,13 +55,13 @@ Route::middleware(['auth'])->group(function () {
     /* Invitation Routes */
 
     Route::prefix('invitation')->controller(InvitationController::class)->as('invite.')->group(function () {
-        Route::get('/invalid', 'invalid')->name('invalid');
+        Route::get('/invalid', 'invalid')->name('invalid')->withoutMiddleware('auth');
         Route::get('/accept/{colocationId}', 'accept')->name('accept');
         Route::get('/reject', 'reject')->name('reject');
         Route::get('/conflict', 'conflict')->name('conflict');
         Route::get('/success/{colocationId}', 'success')->name('success');
         Route::post('/invite/{colocationId}', 'invite')->name('invite')->middleware('colocation:Owner');
-        Route::get('/validate/{tokenValue}', 'validateToken')->name('validate');
+        Route::get('/validate/{tokenValue}', 'validateToken')->name('validate')->withoutMiddleware('auth');
         Route::post('/confirm/{colocationId}', 'confirm')->name('confirm');
         Route::post('/refuse', 'refuse')->name('refuse');
     });
