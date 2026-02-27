@@ -33,7 +33,10 @@ class ExpenseController extends Controller
             ->whereHas("colocation", function ($query) {
                 $query->where('status', 'ACTIVE');
             })
-            ->first()->colocation->members;
+            ->first()
+            ->colocation
+            ->members
+            ->filter(fn ($member) => is_null($member->left_at));
 
         foreach($members as $member){
             if($member->id != $expense->creator_member_id){
