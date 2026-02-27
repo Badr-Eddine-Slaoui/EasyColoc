@@ -52,7 +52,6 @@ class ColocationController extends Controller
         $colocation->load(['members.createdExpenses.category','members.createdExpenses.creator.user', 'members.createdExpenses.details.debtor.user', 'members.createdExpenses.details.expense.creator.user', "owner", "categories"]);
 
         $expenses = $colocation->members
-            ->filter(fn ($member) => is_null($member->left_at))
             ->flatMap(fn ($member) => $member->createdExpenses)
             ->filter(fn ($expense) =>
                 $expense->created_at->year == $year &&
@@ -89,7 +88,7 @@ class ColocationController extends Controller
         $sold = $currentMemberAmount - $otherMembersAmount;
 
         $colocation->members = $colocation->members
-            ->filter(fn ($member) => $member->user_id != Auth::id())
+            ->filter(fn ($member) => $member->user_id != Auth::id() && is_null($member->left_at))
             ->map(function ($member) use ($currentMember, $year, $month) {
 
                 $owed_to_user = ExpenseDetail::where('status', 'PENDING')
