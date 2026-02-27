@@ -52,6 +52,7 @@ class ColocationController extends Controller
         $colocation->load(['members.createdExpenses.category','members.createdExpenses.creator.user', 'members.createdExpenses.details.debtor.user', 'members.createdExpenses.details.expense.creator.user', "owner", "categories"]);
 
         $expenses = $colocation->members
+            ->filter(fn ($member) => is_null($member->left_at))
             ->flatMap(fn ($member) => $member->createdExpenses)
             ->filter(fn ($expense) =>
                 $expense->created_at->year == $year &&
