@@ -12,6 +12,13 @@
                     <span class="material-symbols-outlined text-xs">chevron_right</span>
                     <span class="text-primary font-medium">Catégories</span>
                 </nav>
+                @if (!$is_active)
+                    <div
+                        class="my-5 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                        <p class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Colocation non active</p>
+                    </div>
+                @endif
                 <h1 class="text-4xl md:text-5xl font-black tracking-tight dark:text-slate-100">
                     Catégories de <span
                         class="text-primary underline decoration-accent decoration-4 underline-offset-8">Dépenses</span>
@@ -44,11 +51,11 @@
                     <div class="mt-6 flex items-center gap-1 text-accent-gold font-bold text-xs uppercase tracking-wider">
                         <div class="flex items-center justify-end w-full">
                             <div class="flex items-center gap-4">
-                                <button
+                                <button @disabled(!$is_active)
                                     onclick="showEditModal({{ $category->id }}, '{{ $category->name }}', '{{ $category->description }}')"
                                     class="text-slate-400 hover:text-accent-gold transition-colors" title="Modifier"><span
                                         class="material-symbols-outlined text-sm">edit</span></button>
-                                <button onclick="showDeleteModal({{ $category->id }})" class="text-slate-400 hover:text-primary transition-colors" title="Supprimer"><span
+                                <button @disabled(!$is_active) onclick="showDeleteModal({{ $category->id }})" class="text-slate-400 hover:text-primary transition-colors" title="Supprimer"><span
                                         class="material-symbols-outlined text-sm">delete</span></button>
                             </div>
                         </div>
@@ -56,7 +63,7 @@
                 </div>
             @endforeach
             <!-- Ajouter Nouveau - Ghost State -->
-            <div onclick="showCreateModal()"
+            <div @if($is_active) onclick="showCreateModal()" @endif
                 class="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 bg-transparent hover:border-primary/50 transition-all cursor-pointer h-full min-h-[220px]">
                 <div
                     class="size-12 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors mb-4">

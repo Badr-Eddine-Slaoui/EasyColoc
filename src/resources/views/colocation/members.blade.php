@@ -16,6 +16,13 @@
             <span class="material-symbols-outlined text-xs text-slate-600">chevron_right</span>
             <span class="text-primary uppercase tracking-wider">Membres</span>
         </nav>
+        @if (!$is_active)
+            <div
+                class="my-5 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                <p class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Colocation non active</p>
+            </div>
+        @endif
         <!-- Hero Section -->
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div class="max-w-2xl">
@@ -28,7 +35,7 @@
                 </p>
             </div>
             @if ($is_owner)
-                <button onclick="showAddInvitationModal()"
+                <button @disabled(!$is_active) onclick="showAddInvitationModal()"
                     class="flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-1 active:scale-95">
                     <span class="material-symbols-outlined">person_add</span>
                     <span>Ajouter un Membre</span>
@@ -81,7 +88,7 @@
                     </div>
                     @if ($member->role == 'Member' && $is_owner)
                         <div class="mt-6 pt-4 border-t border-slate-800">
-                            <button onclick="showRemoveMemberModal({{ $colocation->id }}, {{ $member->id }})"
+                            <button @disabled(!$is_active) onclick="showRemoveMemberModal({{ $colocation->id }}, {{ $member->id }})"
                                 class="w-full flex items-center justify-center gap-2 text-primary hover:text-white hover:bg-primary/10 py-2 px-4 rounded-lg border border-primary/20 transition-all text-xs font-bold uppercase tracking-widest">
                                 <span class="material-symbols-outlined text-sm">delete</span>
                                 <span>Retirer le membre</span>

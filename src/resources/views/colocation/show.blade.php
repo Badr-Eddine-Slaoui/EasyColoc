@@ -7,6 +7,13 @@
         $is_owner = auth()->user()->id == $colocation->owner->user_id;
     @endphp
     <main class="max-w-5xl mx-auto w-full px-6 py-8 flex flex-col gap-8">
+        @if (!$is_active)
+            <div
+                class="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                <p class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Colocation non active</p>
+            </div>
+        @endif
         <!-- Header: Summary Section -->
         <section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="space-y-1">
@@ -34,14 +41,14 @@
         <section
             class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
             <div class="flex gap-3 flex-wrap">
-                <button onclick="showAddExpenseModal()"
+                <button @disabled(!$is_active) onclick="showAddExpenseModal()"
                     class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:brightness-110 transition-all shadow-lg shadow-primary/20">
                     <span class="material-symbols-outlined text-sm">add</span>
                     Ajouter une dépense
                 </button>
                 <!-- Owner Only Action -->
                 @if ($is_owner)
-                    <button onclick="showAddInvitationModal()"
+                    <button @disabled(!$is_active) onclick="showAddInvitationModal()"
                         class="flex items-center gap-2 px-5 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg hover:bg-accent-gold hover:text-slate-900 transition-all">
                         <span class="material-symbols-outlined text-sm">person_add</span>
                         Recruter un membre
@@ -111,17 +118,17 @@
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end gap-2">
                                         <button
-                                            onclick='showExpenseDetailsModal({{ auth()->id() }}, @json($expense->details), {{ $expense->details->count() }}, "{{ $expense->title }}", "{{ $expense->amount }}", "{{ $expense->category->name }}")'
+                                            onclick='showExpenseDetailsModal({{ $colocation->id }}, {{ auth()->id() }}, @json($expense->details), {{ $expense->details->count() }}, "{{ $expense->title }}", "{{ $expense->amount }}", "{{ $expense->category->name }}")'
                                             class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
                                             <span class="material-symbols-outlined text-lg">visibility</span>
                                         </button>
                                         @if ($expense->creator->user_id == auth()->id())
-                                            <button
+                                            <button @disabled(!$is_active)
                                                 onclick="showEditExpenseModal({{ $expense->id }}, '{{ $expense->title }}', {{ $expense->category_id }}, {{ $expense->amount }})"
                                                 class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
                                                 <span class="material-symbols-outlined text-lg">edit</span>
                                             </button>
-                                            <button
+                                            <button @disabled(!$is_active)
                                                 onclick="showDeleteExpenseModal({{ $expense->id }}, '{{ $expense->title }}', '{{ $expense->amount }}', '{{ $expense->category->name }}')"
                                                 class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
                                                 <span class="material-symbols-outlined text-lg">delete</span>
@@ -227,7 +234,7 @@
                             dissoudre cette colocation. Attention, cette action est irréversible.
                         </p>
                         <div class="pt-2 border-t border-primary/10">
-                            <button onclick="showDisactivateModal({{ $colocation->id }})"
+                            <button @disabled(!$is_active) onclick="showDisactivateModal({{ $colocation->id }})"
                                 class="w-full flex items-center justify-center gap-2 py-3 bg-primary/10 hover:bg-primary text-primary hover:text-white font-black uppercase text-sm tracking-widest rounded-lg transition-all border border-primary/30">
                                 <span class="material-symbols-outlined">cancel</span>
                                 Annuler la colocation
@@ -240,7 +247,7 @@
                                 class="text-primary font-bold">Membre</span>, vous pouvez quitter cette colocation à tout
                             moment. Assurez-vous d'avoir soldé vos comptes avant de partir.</p>
                         <div class="pt-2 border-t border-primary/10">
-                            <button onclick="showLeaveModal({{ $colocation->id }})"
+                            <button @disabled(!$is_active) onclick="showLeaveModal({{ $colocation->id }})"
                                 class="w-full flex items-center justify-center gap-2 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-sm tracking-widest rounded-lg transition-all border border-red-700 shadow-lg shadow-red-500/20">
                                 <span class="material-symbols-outlined">logout</span> QUITTER LA COLOCATION </button>
                         </div>
@@ -890,7 +897,7 @@
     </div>
 
     <script>
-        function showExpenseDetailsModal(user_id, details, member_count, expense_name, expense_amount, expense_category) {
+        function showExpenseDetailsModal(colocation_id, user_id, details, member_count, expense_name, expense_amount, expense_category) {
             const modal = document.getElementById('expense-details-modal');
             const detailsContainer = document.getElementById('details');
 
@@ -929,7 +936,7 @@
                                     </span>
                                     ${
                                         user_id == detail.expense.creator.user_id ? `
-                                            <form action="${"{{ route('colocation.detail.mark-paid', ':id') }}".replace(':id', detail.id)}" method="POST">
+                                            <form action="${"{{ route('colocation.detail.mark-paid', [':colocation_id', ':id']) }}".replace(':colocation_id', colocation_id).replace(':id', detail.id)}" method="POST">
                                                 @csrf
                                                 @method('PUT')
                                                 <button
