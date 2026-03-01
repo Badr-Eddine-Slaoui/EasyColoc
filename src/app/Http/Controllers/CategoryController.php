@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Colocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
@@ -11,7 +13,11 @@ class CategoryController extends Controller
 {
     public function index(int $colocationId) {
         $categories = Category::where("colocation_id", $colocationId)->get();
-        return view("category.index", compact("categories", "colocationId"));
+
+        $colocation = Colocation::find($colocationId);
+        $is_active = $colocation->status == "ACTIVE" && is_null($colocation->members()->firstWhere('user_id', Auth::id())->left_at);
+
+        return view("category.index", compact("categories", "is_active", "colocationId"));
     }
 
     public function store(Request $request, int $colocationId) {
