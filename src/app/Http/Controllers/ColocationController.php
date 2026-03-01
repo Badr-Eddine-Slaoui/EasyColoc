@@ -69,21 +69,17 @@ class ColocationController extends Controller
             ->where('creator_member_id', $currentMember->id);
 
         $currentMemberAmount = !$currentMemberDetails->count() ? 0 :  $currentMemberDetails
-            ->map(fn ($expense) => $expense->details
-                ->where("status", "PENDING")
-                ->sum('amount')
-            )
-            ->sum();
+            ->flatMap(fn ($expense) => $expense->details)
+            ->filter(fn ($detail) => $detail->status == "PENDING" && $detail->created_at > $currentMember->created_at)
+            ->sum('amount');
 
         $otherMembersDetails = $expenses
             ->where('creator_member_id', '!=', $currentMember->id);
 
         $otherMembersAmount = !$otherMembersDetails->count() ? 0 : $otherMembersDetails
-            ->map(fn ($expense) => $expense->details
-                ->where("status", "PENDING")
-                ->sum('amount')
-            )
-            ->sum();
+            ->flatMap(fn ($expense) => $expense->details)
+            ->filter(fn ($detail) => $detail->status == "PENDING" && $detail->created_at > $currentMember->created_at)
+            ->sum('amount');
 
         $sold = $currentMemberAmount - $otherMembersAmount;
 
@@ -115,7 +111,9 @@ class ColocationController extends Controller
             })
             ->values();
 
-        return view("colocation.show", compact("colocation", "expenses", "total_amount", "sold"));
+        $is_active = $colocation->status == "ACTIVE" && is_null($colocation->members()->firstWhere('user_id', Auth::id())->left_at);
+
+        return view("colocation.show", compact("colocation", "is_active", "expenses", "total_amount", "sold"));
     }
 
     public function store(Request $request){
@@ -193,28 +191,27 @@ class ColocationController extends Controller
                     ->where('creator_member_id', $member->id);
 
                 $currentMemberAmount = !$currentMemberDetails->count() ? 0 :  $currentMemberDetails
-                    ->map(fn ($expense) => $expense->details
-                        ->where("status", "PENDING")
-                        ->sum('amount')
-                    )
-                    ->sum();
+                    ->flatMap(fn ($expense) => $expense->details)
+                    ->filter(fn ($detail) => $detail->status == "PENDING" && $detail->created_at > $member->created_at)
+                    ->sum('amount');
 
                 $otherMembersDetails = $expenses
                     ->where('creator_member_id', '!=', $member->id);
 
                 $otherMembersAmount = !$otherMembersDetails->count() ? 0 : $otherMembersDetails
-                    ->map(fn ($expense) => $expense->details
-                        ->where("status", "PENDING")
-                        ->sum('amount')
-                    )
-                    ->sum();
+                    ->flatMap(fn ($expense) => $expense->details)
+                    ->filter(fn ($detail) => $detail->status == "PENDING" && $detail->created_at > $member->created_at)
+                    ->sum('amount');
 
                 $member->sold = $currentMemberAmount - $otherMembersAmount;
 
                 return $member;
             })
             ->values();
-        return view("colocation.members", compact("members", "colocation"));
+
+        $is_active = $colocation->status == "ACTIVE" && is_null($colocation->members()->firstWhere('user_id', Auth::id())->left_at);
+
+        return view("colocation.members", compact("members", "is_active", "colocation"));
     }
 
     public function removeMember(Colocation $colocation, ColocationMember $colocationMember){
@@ -230,12 +227,12 @@ class ColocationController extends Controller
         return redirect()->route("colocation.show", $colocation)->with("success","Member removed successfully");
     }
 
-    public function markPaid(ExpenseDetail $expenseDetail){
+    public function markPaid(Colocation $colocation, ExpenseDetail $expenseDetail){
 
         $expenseDetail->update([
             "status" => "PAID"
         ]);
 
-        return back()->with("success","Expense marked as paid successfully");
+        return redirect()->route("colocation.show", $colocation)->with("success","Expense marked as paid successfully");
     }
 }
