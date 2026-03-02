@@ -69,7 +69,7 @@ Route::middleware(['auth', 'isBannedOrDeactive'])->group(function () {
     /* Invitation Routes */
 
     Route::prefix('invitation')->controller(InvitationController::class)->as('invite.')->group(function () {
-        Route::get('/validate/{tokenValue}', 'validateToken')->name('validate')->withoutMiddleware('auth');
+        Route::get('/validate/{tokenValue}', 'validateToken')->name('validate')->withoutMiddleware(['auth', 'isBannedOrDeactive']);
         Route::get('/invalid', 'invalid')->name('invalid')->withoutMiddleware('auth');
         Route::get('/reject', 'reject')->name('reject');
         Route::get('/conflict', 'conflict')->name('conflict');
@@ -84,7 +84,7 @@ Route::middleware(['auth', 'isBannedOrDeactive'])->group(function () {
 
     /* Expense Routes */
 
-    Route::prefix('expense')->middleware('ensureColocationIsActive')->controller(ExpenseController::class)->as( 'expense.')->group(function () {
+    Route::prefix('expense')->controller(ExpenseController::class)->as( 'expense.')->group(function () {
         Route::post('/', 'store')->name('store');
         Route::put('/{expense}', 'update')->name('update');
         Route::delete('/{expense}', 'destroy')->name('destroy');
